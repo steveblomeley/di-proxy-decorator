@@ -39,26 +39,26 @@ namespace DiProxyDecorator
         int Mangle(string msg);
     }
 
-    // The concrete type that implements our business logic - notice that it contains
-    // no references to factories or DI Containers. But we presume that this IDisposable
-    // type should be short-lived, and disposed promptly
+    // The concrete type that implements our business logic - it contains no
+    // references to factories or DI Containers, but we presume that this 
+    // IDisposable type should be short-lived, and disposed promptly
     public class ConcreteService : IService, IDisposable
     {
         private static int nextId = 1;
         private readonly int id = nextId++;
-
-        public void Dispose()
-            => Console.WriteLine($"Disposing service with id: {id.GetHashCode()}");
 
         public void Handle(string msg)
             => Console.WriteLine($"Message from service id {id} is : {msg}");
 
         public int Mangle(string msg)
             => msg.GetHashCode();
+
+        public void Dispose()
+            => Console.WriteLine($"Disposing service with id: {id}");
     }
 
     // The proxy decorator for our concrete class
-    // This contains no reference to our concrete class - It's use depends on the correct
+    // This contains no reference to our concrete class - Its use depends on the correct
     // container configuration (i.e. this type must be registered as a decorator of IService
     // AFTER the concrete class has been registered as an implementation of IService - that
     // way, SimpleInjector knows to inject a Func<ConcreteService> where the constructor
@@ -70,10 +70,10 @@ namespace DiProxyDecorator
         }
 
         public void Handle(string msg)
-            => InvokeMethodWithinAsyncScope(service => service.Handle(msg));
+            => InvokeMethodWithinAsyncScope( service => service.Handle(msg) );
 
         public int Mangle(string msg)
-            => InvokeMethodWithinAsyncScope(service => service.Mangle(msg));
+            => InvokeMethodWithinAsyncScope( service => service.Mangle(msg) );
     }
     
     // The generic proxy class encapsulates the repeated boilerplate code of creating a new
@@ -100,7 +100,6 @@ namespace DiProxyDecorator
                 invokeMethod(service);
             }
         }
-
         public TReturn InvokeMethodWithinAsyncScope<TReturn>(Func<TService, TReturn> invokeMethod)
         {
             using (AsyncScopedLifestyle.BeginScope(_container))
